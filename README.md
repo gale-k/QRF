@@ -1,2 +1,2 @@
 # QRF
-Quantum Reference Frame (QRF) Attention introduces a paradigm shift from similarity- based to relational computation.
+Quantum Reference Frame (QRF) Attention introduces a shift from similarity- based to relational computation in which each token is encoded in a sequence as a quantum state. A dedicated quantum reference frame (e.g., a qubit in a superposition state) is prepared. The attention score between tokens is not a dot-product, but a function of the joint quantum state of the token states and the reference frame after applying entangling operations and phase encodings, drawing inspiration from quantum information processing techniques
