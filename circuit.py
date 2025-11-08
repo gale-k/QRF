@@ -1,6 +1,6 @@
-# produce a circuit image file from your existing Qiskit circuit
+# produce a circuit image file from existing Qiskit circuit
 from QAttention import QuantumCircuit
-# construct the circuit (example: follow your QAttention.py)
+# construct the circuit (following QAttention.py)
 qc = QuantumCircuit(4,4)
 # 0-1 reference frame
 qc.h(0)
