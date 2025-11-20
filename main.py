@@ -1,47 +1,107 @@
-from datasets.dataset_api import load_relational_dataset
-from QAttention import QuantumReferenceFrameAttention
+# main.py
+
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-import numpy as np
 
-def build_rel_pairs(X, y, num_pairs=1000):
-    N = len(X)
+from datasets.relbench_loader import load_relbench
+from QAttention import quantum_reference_frame_attention
+
+
+# -------------------------------------------------------
+# Build relational pairs for QRF attention
+# -------------------------------------------------------
+def build_relational_pairs(X, y, num_pairs=2000):
     pairs, labels = [], []
+    N = len(X)
+
     for _ in range(num_pairs):
         i, j = np.random.choice(N, 2, replace=False)
-        pairs.append([X[i][0], X[j][0]])   # use angle from PCA
-        labels.append(int(y[i] == y[j]))
+
+        # QRF uses angles → one dimension per entity
+        query_angle = float(X[i][0])
+        key_angle   = float(X[j][0])
+
+        # Relation label: same class or not
+        label = 1 if y[i] == y[j] else 0
+
+        pairs.append([query_angle, key_angle])
+        labels.append(label)
+
     return np.array(pairs), np.array(labels)
 
-def compute_qrf_scores(pairs):
+
+# -------------------------------------------------------
+# Compute QRF attention scores
+# -------------------------------------------------------
+def compute_qrf_scores(X_pairs):
     qrf = QuantumReferenceFrameAttention()
     scores = []
-    for q, k in pairs:
-        qc = qrf.build_qrf_circuit(float(q), float(k))
-        scores.append(qrf.attention_score(qc))
+
+    for q, k in X_pairs:
+        circuit = qrf.build_qrf_circuit(q, k)
+        score = qrf.attention_score(circuit)
+        scores.append(score)
+
     return np.array(scores).reshape(-1, 1)
 
-def run(dataset_source, name):
-    print(f"\n=== Running QRF on {dataset_source}:{name} ===")
 
-    X, y = load_relational_dataset(dataset_source, name, n_features=4)
+# -------------------------------------------------------
+# Run QRF on a specific RelBench dataset + task
+# -------------------------------------------------------
+def run_qrf_experiment(dataset_name, task_name, num_pairs=2000):
+    print(f"\n=== Running QRF Attention on {dataset_name} / {task_name} ===")
 
-    pairs, labels = build_rel_pairs(X, y)
-    X_train, X_test, y_train, y_test = train_test_split(pairs, labels, test_size=0.2)
+    # 1. Load RelBench entity table for the task
+    X, y = load_relbench(dataset_name, task_name, n_features=4)
 
-    train_scores = compute_qrf_scores(X_train)
-    test_scores = compute_qrf_scores(X_test)
+    # 2. Build QRF relational input pairs
+    X_pairs, y_pairs = build_relational_pairs(X, y, num_pairs=num_pairs)
 
-    clf = LogisticRegression().fit(train_scores, y_train)
-    preds = clf.predict(test_scores)
-    print("Accuracy:", accuracy_score(y_test, preds))
+    # 3. Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_pairs, y_pairs, test_size=0.2, random_state=42
+    )
 
+    # 4. Compute QRF relational scores
+    X_train_scores = compute_qrf_scores(X_train)
+    X_test_scores = compute_qrf_scores(X_test)
+
+    # 5. Train classical classifier on QRF outputs
+    clf = LogisticRegression()
+    clf.fit(X_train_scores, y_train)
+
+    preds = clf.predict(X_test_scores)
+    acc = accuracy_score(y_test, preds)
+
+    print(f"[RESULT] QRF accuracy on relational pair task: {acc:.4f}")
+    return acc
+
+
+# -------------------------------------------------------
+# Run across multiple datasets
+# -------------------------------------------------------
 def main():
-    run("relbench", "rel-f1")
-    run("relbench", "rel-airbnb")
-    run("rdbench", "credit")
-    run("wikidbs", "airport")
+
+    # Any datasets available in RelBench can be added here
+    experiments = [
+        ("rel-amazon", "product-category"),
+        ("rel-movielens", "user-genre"),
+        ("rel-dblp", "author-field"),
+        ("rel-cora", "paper-topic"),
+    ]
+
+    results = {}
+
+    for dataset_name, task_name in experiments:
+        acc = run_qrf_experiment(dataset_name, task_name)
+        results[(dataset_name, task_name)] = acc
+
+    print("\n=== Final QRF Results ===")
+    for (dataset, task), acc in results.items():
+        print(f"{dataset:<15s} | {task:<20s} | accuracy={acc:.4f}")
+
 
 if __name__ == "__main__":
     main()

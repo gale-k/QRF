@@ -1,30 +1,58 @@
 # relbench_loader.py
 
-from relbench.data import load_dataset
-from sklearn.decomposition import PCA
+from relbench.datasets import get_dataset
+from relbench.tasks import get_task
+import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
 
-def load_relbench(name, n_features=4):
+
+# Load a RelBench dataset and task
+
+def load_relbench(dataset_name: str, task_name: str, n_features: int = 4):
     """
-    Load a RelBench dataset and return (X, y)
-    Works for:
-        - rel-f1
-        - rel-airbnb
-        - rel-rossmann
-        - rel-walmart
+    Loads a dataset and task from RelBench, extracts the main entity table,
+    returns feature matrix X and target array y suitable for QRF attention.
+
+    Parameters
+    ----------
+    dataset_name : str  (e.g. "rel-amazon", "rel-movielens")
+    task_name    : str  (e.g. "user-churn", "product-category")
+    n_features   : int  number of PCA dimensions for QRF encoding
+
+    Returns
+    -------
+    X : np.ndarray  (N, n_features)   entity feature matrix
+    y : np.ndarray  (N,)              entity labels for classification
     """
 
-    ds = load_dataset(name)   # returns a relational DB object
+    print(f"[INFO] Loading dataset '{dataset_name}' task '{task_name}'...")
 
-    # Usually the "primary entity" is ds.main_table
-    main = ds.get_table(ds.main_table)
+    dataset = get_dataset(dataset_name, download=True)
+    task = get_task(dataset_name, task_name, download=True)
 
-    # Features & labels from the target task
-    X = main.features.drop(columns=[main.target]).values
-    y = main.features[main.target].values
+    # Get the main table used for the task (train split)
+    table = task.get_table("train")        # RelBench Table object
+    df = table.to_pandas()                 # Convert to pandas
 
-    # Dimensionality reduction for quantum embedding
-    X = PCA(n_components=n_features).fit_transform(X)
-    X = MinMaxScaler((0, 1)).fit_transform(X)
+    target_col = table.target_column       # The label column
+
+    # Extract features and labels
+    X_raw = df.drop(columns=[target_col]).select_dtypes(include=['float', 'int'])
+    y = df[target_col].values
+
+    # Convert to numpy
+    X_raw = X_raw.values
+
+    
+    # Normalisation + PCA compression
+    
+    scaler = MinMaxScaler((0, 1))
+    X_scaled = scaler.fit_transform(X_raw)
+
+    pca = PCA(n_components=n_features)
+    X = pca.fit_transform(X_scaled)
+
+    print(f"[INFO] Loaded {X.shape[0]} samples with {X.shape[1]} PCA features.")
 
     return X, y
