@@ -2,60 +2,69 @@
 from qiskit.circuit import QuantumCircuit, ParameterVector, Parameter
 from qiskit_aer import Aer
 
+N_PARAMS = 9
+
 class quantum_reference_frame_attention:
-    def __init__(self, n_qubits=4, n_params=9):
+    def __init__(self, n_qubits=4, n_params=N_PARAMS):
+        """
+        Qubits:
+        0-1 : reference frame (entangled)
+        2   : query
+        3   : key
+        """
         self.n_qubits = n_qubits
         self.theta = ParameterVector("θ", n_params)
     
-    def get_circuit(self, query_angle, key_angle):
-        qc = QuantumCircuit(self.n_qubits)
-        # reference frame (qubits 0 & 1)
-        qc.h(0)     # put qubit 1 into superposition
-        qc.cx(0, 1) # entangle qubits 0 & 1
-        # established shared reference frame (like a 'quantum coordinate system')
+    def prepare_reference_frame(self, qc):
+        qc.h(0)
+        qc.cx(0, 1)
+        return qc
 
-        # encode query/key (qubits 2 & 3) into quantum states
+    def encode_tokens(self, qc, query_angle, key_angle):
         qc.ry(query_angle, 2)
         qc.ry(key_angle, 3)
-
-        # parameterised layers
+        return qc
+    
+    def add_trainable_layers(self, qc):
+        # Add 9 trainable parameters on each qubit
         for i in range(4):
-            qc.ry(self.theta[i], i)     # trainable y rotation on each qubit (magnitude of attention)
-            qc.rz(self.theta[i+4], i)   # trainable z rotation on each qubit (phase)
-        # learnable paramters allow model to adapt 
-
-        # establish relational entanglement
-        qc.cx(0, 2)     # entangle reference (qubit 0) with query (qubit 2)
-        qc.cx(1, 3)     # entangle reference (qubit 1) with key (qubit 3)
-        # created quantum correlations between reference frame and query & key
-        # ensures query & key are compared relative to same reference
-
-        # encode relational phase
-        qc.cry(self.theta[8], 2, 3)     # controlled y rotation betwen query & key
-
+            qc.ry(self.theta[i], i)
+            qc.rz(self.theta[i+4], i)
         return qc
     
-    def get_qrf_attention(self, qc, shots=1024):
-        total = 0
-        runs = 3
-        for _ in range(runs):
-            simulator = Aer.get_backend('qasm_simulator')
-            result = simulator.run(qc, shots=shots).result()
-            counts = result.get_counts()
-            # probability that tokens are in the same state
-            total += (counts.get('00', 0) + counts.get('11', 0)) / shots
-        return total/runs
-    
-    def get_feature_map(self, num_features, query, key):
-        # convert to a feature map that takes input angles
-        feature_map = QuantumCircuit(num_features)
-        feature_map.compose(self.get_circuit(query, key), inplace=True)
-        return feature_map
-    
-    def get_measurement_circuit(self, query_angle, key_angle):
-        qc = self.get_circuit(query_angle, key_angle)
-        # measure in different bases for richer information
-        # measure token qubits (2-3) - query & key
-        qc.h([2,3])  # Hadamard basis measurement
-        qc.measure([2,3], [0,1])
+    def entangle_reference_with_tokens(self, qc):
+        qc.cx(0, 2)
+        qc.cx(1, 3)
         return qc
+
+    def add_relational_phase(self, qc):
+        qc.cry(self.theta[8], 2, 3)
+        return qc
+
+    def build_qrf_circuit(self, query_angle, key_angle):
+        qc = QuantumCircuit(self.n_qubits, 2)
+
+        self.prepare_reference_frame(qc)
+        self.encode_tokens(qc, query_angle, key_angle)
+        self.add_trainable_layers(qc)
+        self.entangle_reference_with_tokens(qc)
+        self.add_relational_phase(qc)
+
+        # measurement on token qubits only
+        qc.measure([2, 3], [0, 1])
+        return qc
+    
+    def attention_score(self, qc, shots=2048):
+        backend = Aer.get_backend("qasm_simulator")
+        result = backend.run(qc, shots=shots).result()
+        counts = result.get_counts()
+
+        # token (2,3) outcomes are in last 2 bits
+        score = 0
+        for bitstring, count in counts.items():
+            token_bits = bitstring[-2:]  # last 2 bits
+            if token_bits in ["00", "11"]:
+                score += count
+
+        return score / shots
+
