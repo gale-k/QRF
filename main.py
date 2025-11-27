@@ -36,7 +36,7 @@ def build_relational_pairs(X, y, num_pairs=2000):
 # Compute QRF attention scores
 # -------------------------------------------------------
 def compute_qrf_scores(X_pairs):
-    qrf = QuantumReferenceFrameAttention()
+    qrf = quantum_reference_frame_attention()
     scores = []
 
     for q, k in X_pairs:
@@ -55,6 +55,10 @@ def run_qrf_experiment(dataset_name, task_name, num_pairs=2000):
 
     # 1. Load RelBench entity table for the task
     X, y = load_relbench(dataset_name, task_name, n_features=4)
+
+    # debugging
+    print(X)
+    print(y)
 
     # 2. Build QRF relational input pairs
     X_pairs, y_pairs = build_relational_pairs(X, y, num_pairs=num_pairs)
@@ -86,10 +90,10 @@ def main():
 
     # Any datasets available in RelBench can be added here
     experiments = [
-        ("rel-amazon", "product-category"),
-        ("rel-movielens", "user-genre"),
-        ("rel-dblp", "author-field"),
-        ("rel-cora", "paper-topic"),
+        ("rel-stack", "rel-amazon"),
+        ("rel-trial", "rel-f1"),
+        ("rel-hm", "rel-event"),
+        ("rel-avito"),
     ]
 
     results = {}
