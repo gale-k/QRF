@@ -54,7 +54,7 @@ def run_qrf_experiment(dataset_name, task_name, num_pairs=2000):
     print(f"\n=== Running QRF Attention on {dataset_name} / {task_name} ===")
 
     # 1. Load RelBench entity table for the task
-    X, y = load_relbench(dataset_name, task_name, n_features=4)
+    X, y = load_relbench(dataset_name, task_name)#, n_features=4)
 
     # debugging
     print(X)
@@ -88,12 +88,15 @@ def run_qrf_experiment(dataset_name, task_name, num_pairs=2000):
 # -------------------------------------------------------
 def main():
 
-    # Any datasets available in RelBench can be added here
+    # All datasets available in RelBench are here, with a single corresponding task:
     experiments = [
-        ("rel-stack", "rel-amazon"),
-        ("rel-trial", "rel-f1"),
-        ("rel-hm", "rel-event"),
-        ("rel-avito"),
+        ("rel-stack", "user-engagement"),
+        ("rel-amazon", "user-churn"),
+        ("rel-trial", "study-outcome"),
+        ("rel-f1", "driver-position"),
+        ("rel-hm", "user-churn"),
+        ("rel-event", "user-repeat"),
+        ("rel-avito", "user-visits"),
     ]
 
     results = {}
