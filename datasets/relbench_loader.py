@@ -7,24 +7,58 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 import pandas as pd
 
-def entity_features_to_angle(df: pd.DataFrame, n_components: int = 1, angle_range: float = np.pi):
-    """
-    Convert numeric features of a dataframe to a 1D angle for QRF.
-    """
-    numeric_cols = df.select_dtypes(include=['float', 'int']).columns
+# def entity_features_to_angle(df: pd.DataFrame, n_components: int = 1, angle_range: float = np.pi):
+#     """
+#     Convert numeric features of a dataframe to a 1D angle for QRF.
+#     """
+#     numeric_cols = df.select_dtypes(include=['float', 'int']).columns
+#     X = df[numeric_cols].values
+
+#     # Normalize to [0, angle_range]
+#     scaler = MinMaxScaler((0, angle_range))
+#     X_scaled = scaler.fit_transform(X)
+
+#     # Reduce to 1D
+#     pca = PCA(n_components=n_components)
+#     X_angle = pca.fit_transform(X_scaled)
+#     return X_angle.flatten()  # 1D array
+
+def entity_features_to_angle(
+    df: pd.DataFrame,
+    n_components: int = 1,
+    angle_range: float = np.pi,
+    pca=None,
+    scaler=None,
+    fit=True,
+    ):
+    numeric_cols = df.select_dtypes(include=["float", "int"]).columns
     X = df[numeric_cols].values
 
-    # Normalize to [0, angle_range]
-    scaler = MinMaxScaler((0, angle_range))
-    X_scaled = scaler.fit_transform(X)
+    if pca is None:
+        pca = PCA(n_components=n_components)
+    if scaler is None:
+        scaler = MinMaxScaler((0, angle_range))
 
-    # Reduce to 1D
-    pca = PCA(n_components=n_components)
-    X_angle = pca.fit_transform(X_scaled)
-    return X_angle.flatten()  # 1D array
+    if fit:
+        X_pca = pca.fit_transform(X)
+        X_angle = scaler.fit_transform(X_pca)
+    else:
+        X_pca = pca.transform(X)
+        X_angle = scaler.transform(X_pca)
+
+    return X_angle, pca, scaler
 
 
-def load_relbench(dataset_name: str, task_name: str, split: str = "train") -> tuple[np.ndarray, np.ndarray]:
+# def load_relbench(dataset_name: str, task_name: str, split: str = "train") -> tuple[np.ndarray, np.ndarray]:
+def load_relbench(
+    dataset_name: str,
+    task_name: str,
+    split: str = "train",
+    pca=None,
+    scaler=None,
+    fit=True,
+    ):
+
     """
     Load a RelBench dataset and task, convert entity features to QRF angles.
     
@@ -38,18 +72,23 @@ def load_relbench(dataset_name: str, task_name: str, split: str = "train") -> tu
 
     # 1. Access entity table
     # RelBench 1.1.0: entity_table is a string; fetch via dataset DB
+    # 1. Get database WITHOUT triggering temporal slicing
+    # Disable temporal slicing (RelBench 1.x safe)
+    if hasattr(dataset, "test_timestamp"):
+        dataset.test_timestamp = None
+
     db = dataset.get_db()
-    entity_table_name = task.entity_table  # string
-    # The database object provides 'tables' as a list; we search for the matching table name
-    entity_table = None
-    for table in db.tables:
-        if table.name == entity_table_name:
-            entity_table = table
-            break
+
+
+    entity_table_name = task.entity_table
+
+    entity_table = db.table_dict.get(entity_table_name)
     if entity_table is None:
         raise ValueError(f"Entity table '{entity_table_name}' not found in database.")
 
-    entity_df = entity_table.to_pandas()
+    # Convert directly to pandas (no upto(), no query)
+    entity_df = entity_table.df.copy()
+
 
     # 2. Load label table for the split
     label_df = task.get_table(split).to_pandas()
@@ -57,13 +96,30 @@ def load_relbench(dataset_name: str, task_name: str, split: str = "train") -> tu
     # 3. Join entity features with labels
     df = entity_df.merge(label_df, on="entity_id", how="inner")
 
+    # debug check:
+    print("Entity rows:", entity_df.shape)
+    print("Label rows:", label_df.shape)
+    print("Merged rows:", df.shape)
+
+
     # 4. Extract angles and labels
     target_col = task.target_column
-    X_angles = entity_features_to_angle(df.drop(columns=["entity_id", target_col]))
+    # X_angles = entity_features_to_angle(df.drop(columns=["entity_id", target_col]))
+    # y = df[target_col].values
+
+    X_angles, pca, scaler = entity_features_to_angle(
+    df.drop(columns=["entity_id", target_col]),
+    n_components=1,
+    pca=pca,
+    scaler=scaler,
+    fit=fit,
+    )
     y = df[target_col].values
 
+
     print(f"[INFO] Loaded {len(y)} samples with 1D angles for QRF.")
-    return X_angles, y
+    # return X_angles, y
+    return X_angles, y, pca, scaler
 
 
 def load_relbench_all_splits(dataset_name: str, task_name: str):

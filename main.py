@@ -5,29 +5,47 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
-from datasets.relbench_loader import load_relbench
+# imports for relational datasets: https://pypi.org/project/relational-datasets/
+import relational_datasets
+from relational_datasets import load
+
 from QAttention import quantum_reference_frame_attention
 
 
 # -------------------------------------------------------
 # Build relational pairs for QRF attention
 # -------------------------------------------------------
+# def build_relational_pairs(X, y, num_pairs=2000):
+#     pairs, labels = [], []
+#     N = len(X)
+
+#     for _ in range(num_pairs):
+#         i, j = np.random.choice(N, 2, replace=False)
+
+#         # QRF uses angles → one dimension per entity
+#         query_angle = float(X[i][0])
+#         key_angle   = float(X[j][0])
+
+#         # Relation label: same class or not
+#         label = 1 if y[i] == y[j] else 0
+
+#         pairs.append([query_angle, key_angle])
+#         labels.append(label)
+
+#     return np.array(pairs), np.array(labels)
+
 def build_relational_pairs(X, y, num_pairs=2000):
     pairs, labels = [], []
     N = len(X)
 
-    for _ in range(num_pairs):
+    while len(labels) < num_pairs:
         i, j = np.random.choice(N, 2, replace=False)
+        same = int(y[i] == y[j])
 
-        # QRF uses angles → one dimension per entity
-        query_angle = float(X[i][0])
-        key_angle   = float(X[j][0])
-
-        # Relation label: same class or not
-        label = 1 if y[i] == y[j] else 0
-
-        pairs.append([query_angle, key_angle])
-        labels.append(label)
+        # balance positives / negatives
+        if same == 1 or np.random.rand() < 0.5:
+            pairs.append([float(X[i, 0]), float(X[j, 0])])
+            labels.append(same)
 
     return np.array(pairs), np.array(labels)
 
@@ -50,11 +68,11 @@ def compute_qrf_scores(X_pairs):
 # -------------------------------------------------------
 # Run QRF on a specific RelBench dataset + task
 # -------------------------------------------------------
-def run_qrf_experiment(dataset_name, task_name, num_pairs=2000):
-    print(f"\n=== Running QRF Attention on {dataset_name} / {task_name} ===")
+def run_qrf_experiment(dataset_name, num_pairs=2000):
+    print(f"\n=== Running QRF Attention on {dataset_name} ===")
 
-    # 1. Load RelBench entity table for the task
-    X, y = load_relbench(dataset_name, task_name)#, n_features=4)
+    train, test = load(dataset_name)
+
 
     # debugging
     print(X)
@@ -88,22 +106,20 @@ def run_qrf_experiment(dataset_name, task_name, num_pairs=2000):
 # -------------------------------------------------------
 def main():
 
-    # All datasets available in RelBench are here, with a single corresponding task:
+    print("test")
+    
+    # All datasets available are here from https://srlearn.github.io/relational-datasets/downloads/ 
     experiments = [
-        ("rel-stack", "user-engagement"),
-        ("rel-amazon", "user-churn"),
-        ("rel-trial", "study-outcome"),
-        ("rel-f1", "driver-position"),
-        ("rel-hm", "user-churn"),
-        ("rel-event", "user-repeat"),
-        ("rel-avito", "user-visits"),
+        ("toy_machines"),
+        ("toy_father"),
+        ("toy_cancer")
     ]
 
     results = {}
 
-    for dataset_name, task_name in experiments:
-        acc = run_qrf_experiment(dataset_name, task_name)
-        results[(dataset_name, task_name)] = acc
+    for dataset_name in experiments:
+        acc = run_qrf_experiment(dataset_name)
+        results[(dataset_name)] = acc
 
     print("\n=== Final QRF Results ===")
     for (dataset, task), acc in results.items():
