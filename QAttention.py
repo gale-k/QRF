@@ -1,4 +1,4 @@
-# QRFAttention.py
+# QAttention.py
 from qiskit.circuit import QuantumCircuit, ParameterVector, Parameter
 from qiskit_aer import Aer
 
@@ -41,6 +41,19 @@ class quantum_reference_frame_attention:
         qc.cry(self.theta[8], 2, 3)
         return qc
 
+    # def build_qrf_circuit(self, query_angle, key_angle):
+    #     qc = QuantumCircuit(self.n_qubits, 2)
+
+    #     self.prepare_reference_frame(qc)
+    #     self.encode_tokens(qc, query_angle, key_angle)
+    #     self.add_trainable_layers(qc)
+    #     self.entangle_reference_with_tokens(qc)
+    #     self.add_relational_phase(qc)
+
+    #     # measurement on token qubits only
+    #     qc.measure([2, 3], [0, 1])
+    #     return qc
+    
     def build_qrf_circuit(self, query_angle, key_angle):
         qc = QuantumCircuit(self.n_qubits, 2)
 
@@ -52,10 +65,17 @@ class quantum_reference_frame_attention:
 
         # measurement on token qubits only
         qc.measure([2, 3], [0, 1])
+
+        # bind all 9 trainable parameters to numeric values
+        param_dict = {self.theta[i]: 0.1 for i in range(len(self.theta))}
+
+        qc = qc.assign_parameters(param_dict)
+
         return qc
-    
+
+
     def attention_score(self, qc, shots=2048):
-        backend = Aer.get_backend("qasm_simulator")
+        backend = Aer.get_backend("aer_simulator")
         result = backend.run(qc, shots=shots).result()
         counts = result.get_counts()
 

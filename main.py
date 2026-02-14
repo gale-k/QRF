@@ -1,129 +1,29 @@
-# main.py
-
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-
-# imports for relational datasets: https://pypi.org/project/relational-datasets/
-import relational_datasets
-from relational_datasets import load
-
 from QAttention import quantum_reference_frame_attention
+from data_info.relational_loader import load_relational_dataset
 
 
-# -------------------------------------------------------
-# Build relational pairs for QRF attention
-# -------------------------------------------------------
-# def build_relational_pairs(X, y, num_pairs=2000):
-#     pairs, labels = [], []
-#     N = len(X)
-
-#     for _ in range(num_pairs):
-#         i, j = np.random.choice(N, 2, replace=False)
-
-#         # QRF uses angles → one dimension per entity
-#         query_angle = float(X[i][0])
-#         key_angle   = float(X[j][0])
-
-#         # Relation label: same class or not
-#         label = 1 if y[i] == y[j] else 0
-
-#         pairs.append([query_angle, key_angle])
-#         labels.append(label)
-
-#     return np.array(pairs), np.array(labels)
-
-def build_relational_pairs(X, y, num_pairs=2000):
-    pairs, labels = [], []
-    N = len(X)
-
-    while len(labels) < num_pairs:
-        i, j = np.random.choice(N, 2, replace=False)
-        same = int(y[i] == y[j])
-
-        # balance positives / negatives
-        if same == 1 or np.random.rand() < 0.5:
-            pairs.append([float(X[i, 0]), float(X[j, 0])])
-            labels.append(same)
-
-    return np.array(pairs), np.array(labels)
-
-
-# -------------------------------------------------------
-# Compute QRF attention scores
-# -------------------------------------------------------
-def compute_qrf_scores(X_pairs):
-    qrf = quantum_reference_frame_attention()
-    scores = []
-
-    for q, k in X_pairs:
-        circuit = qrf.build_qrf_circuit(q, k)
-        score = qrf.attention_score(circuit)
-        scores.append(score)
-
-    return np.array(scores).reshape(-1, 1)
-
-
-# -------------------------------------------------------
-# Run QRF on a specific RelBench dataset + task
-# -------------------------------------------------------
-def run_qrf_experiment(dataset_name, num_pairs=2000):
-    print(f"\n=== Running QRF Attention on {dataset_name} ===")
-
-    train, test = load(dataset_name)
-
-
-    # debugging
-    print(X)
-    print(y)
-
-    # 2. Build QRF relational input pairs
-    X_pairs, y_pairs = build_relational_pairs(X, y, num_pairs=num_pairs)
-
-    # 3. Train/test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_pairs, y_pairs, test_size=0.2, random_state=42
-    )
-
-    # 4. Compute QRF relational scores
-    X_train_scores = compute_qrf_scores(X_train)
-    X_test_scores = compute_qrf_scores(X_test)
-
-    # 5. Train classical classifier on QRF outputs
-    clf = LogisticRegression()
-    clf.fit(X_train_scores, y_train)
-
-    preds = clf.predict(X_test_scores)
-    acc = accuracy_score(y_test, preds)
-
-    print(f"[RESULT] QRF accuracy on relational pair task: {acc:.4f}")
-    return acc
-
-
-# -------------------------------------------------------
-# Run across multiple datasets
-# -------------------------------------------------------
 def main():
 
-    print("test")
-    
-    # All datasets available are here from https://srlearn.github.io/relational-datasets/downloads/ 
-    experiments = [
-        ("toy_machines"),
-        ("toy_father"),
-        ("toy_cancer")
-    ]
+    # singular dataset for testing purposes
+    dataset_name = "toy_machines" 
+    dataset = load_relational_dataset(dataset_name)
 
-    results = {}
+    qrf = quantum_reference_frame_attention()
 
-    for dataset_name in experiments:
-        acc = run_qrf_experiment(dataset_name)
-        results[(dataset_name)] = acc
+    print(f"\n[INFO] Running QRF on {dataset_name}...\n")
 
-    print("\n=== Final QRF Results ===")
-    for (dataset, task), acc in results.items():
-        print(f"{dataset:<15s} | {task:<20s} | accuracy={acc:.4f}")
+    for i in range(min(len(dataset), 30)):
+
+        query_angle, key_angle, label = dataset.get_pair(i)
+
+        qc = qrf.build_qrf_circuit(
+            query_angle=query_angle,
+            key_angle=key_angle
+        )
+
+        attention = qrf.attention_score(qc)
+
+        print(f"[{i}] Attention: {attention:.4f} | Label: {label:.4f}")
 
 
 if __name__ == "__main__":
