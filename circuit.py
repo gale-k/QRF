@@ -1,30 +1,36 @@
 # produce a circuit image file from existing Qiskit circuit
 from QAttention import QuantumCircuit
 
-def get_circuit():
-    # construct the circuit (following QAttention.py)
-    qc = QuantumCircuit(4,4)
-    # 0-1 reference frame
-    qc.h(0)
-    qc.cx(0,1)
-    # encode query/key on qubits 2,3
-    qc.ry(0.8,2)   # use symbolic or numeric angles for display
-    qc.ry(1.2,3)
-    # param layers (example placeholders)
-    qc.ry(0.1,0); qc.rz(0.2,0)
-    qc.ry(0.3,1); qc.rz(0.4,1)
-    qc.ry(0.5,2); qc.rz(0.6,2)
-    qc.ry(0.7,3); qc.rz(0.8,3)
-    # relational entanglement
-    qc.cx(0,2)
-    qc.cx(1,3)
-    # controlled rotation (CRY) - Qiskit supports crx/crz; for cry use qiskit.circuit.library
-    from qiskit.circuit.library import CRYGate
-    qc.append(CRYGate(0.9), [2,3])
-    # measurement (optional)
-    qc.measure([0,1,2,3],[0,1,2,3])
+# circuit.py
+from QAttention import quantum_reference_frame_attention
+import matplotlib.pyplot as plt
+import numpy as np
 
-    # Draw and save
-    qc.draw(output='mpl', filename='qrf_circuit.png', scale=1.4)
-    # or for svg
-    qc.draw(output='mpl').savefig('qrf_circuit.svg')
+# Example token angles for 2 tokens (query + key)
+token_angles = [0.5, 1.0]  # radians
+
+# Initialize QRF with 2 reference qubits + 2 token qubits
+qrf = quantum_reference_frame_attention(n_qubits=4)
+
+# Build the QRF circuit with random theta values
+theta_values = np.random.uniform(0, 2 * np.pi, len(qrf.theta))
+qc = qrf.build_qrf_circuit(token_angles, theta_values)
+
+# -----------------------------
+# save as SVG
+# -----------------------------
+qc.draw(output='mpl')  # matplotlib figure
+plt.savefig("qrf_circuit.svg", bbox_inches='tight')
+print("[INFO] Saved QRF circuit as qrf_circuit.svg")
+
+# -----------------------------
+# save as PNG
+# -----------------------------
+plt.savefig("qrf_circuit.png", bbox_inches='tight', dpi=300)
+print("[INFO] Saved QRF circuit as qrf_circuit.png")
+
+
+# # Draw and save
+# qc.draw(output='mpl', filename='qrf_circuit.png', scale=1.4)
+# # or for svg
+# qc.draw(output='mpl').savefig('qrf_circuit.svg')
