@@ -10,6 +10,8 @@ import re
 # where label is derived from:
     # defective(m1) ∈ pos ?
 
+# imports for relational datasets: https://pypi.org/project/relational-datasets/
+
 class ToyRelationalQRF:
 
     def __init__(self, dataset_name):
