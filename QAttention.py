@@ -119,7 +119,7 @@ class quantum_reference_frame_attention:
 
         return qc
 
-    def attention_score(self, qc, shots=2048):
+    def attention_score(self, qc, shots=1024):
         backend = Aer.get_backend("aer_simulator")
         result = backend.run(qc, shots=shots).result()
         counts = result.get_counts()
@@ -141,11 +141,22 @@ class quantum_reference_frame_attention:
         n = len(query_angles)
         A = np.zeros((n, n))
 
-        for i in range(n):
-            for j in range(n):
+        # for i in range(n):
+        #     for j in range(n):
+        #         qc = self.build_qrf_circuit(query_angles[i], key_angles[j], theta_values)
+        #         A[i, j] = self.attention_score(qc)
+        # return A
+    
+        max_samples = 50
+
+        indices = np.random.choice(n, max_samples, replace=False)
+
+        for i in indices:
+            for j in indices:
                 qc = self.build_qrf_circuit(query_angles[i], key_angles[j], theta_values)
                 A[i, j] = self.attention_score(qc)
         return A
+
 
     @staticmethod
     def binary_cross_entropy(pred, target, eps=1e-8):

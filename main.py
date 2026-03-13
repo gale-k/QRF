@@ -6,7 +6,7 @@ import numpy as np
 
 def main():
     # Load dataset
-    dataset_name = "boston_housing"
+    dataset_name = "toy_machines"
     dataset = load_relational_dataset(dataset_name)
 
     # For sequences with 2 query/key pairs
