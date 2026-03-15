@@ -14,7 +14,9 @@ class quantum_reference_frame_attention:
         3   : key
         """
         self.n_qubits = n_qubits
+        self.n_params = n_params
         self.theta = ParameterVector("θ", n_params)
+
     
     def prepare_reference_frame(self, qc):
         qc.h(0)
