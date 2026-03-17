@@ -1,7 +1,8 @@
+# circuit_annotated.py
+
 from qiskit import QuantumCircuit
 from qiskit.visualization import circuit_drawer
 from qiskit.circuit import ParameterVector
-import os
 
 # QRF Circuit with annotated θ
 def build_annotated_qrf():

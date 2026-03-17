@@ -1,3 +1,5 @@
+# batch_utils.py
+
 import numpy as np
 
 def sample_batch(dataset, batch_size):

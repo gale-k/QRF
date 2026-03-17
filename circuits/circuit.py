@@ -1,7 +1,5 @@
-# produce a circuit image file from existing Qiskit circuit
-from attention_models.quantum_reference_frame_attention import QuantumCircuit
-
 # circuit.py
+
 from attention_models.quantum_reference_frame_attention import quantum_reference_frame_attention
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,9 +25,3 @@ print("[INFO] Saved QRF circuit as qrf_circuit.svg")
 # save as PNG
 plt.savefig(os.path.join("circuits", "qrf_circuit.png"), bbox_inches='tight', dpi=300)
 print("[INFO] Saved QRF circuit as qrf_circuit.png")
-
-
-# # Draw and save
-# qc.draw(output='mpl', filename='qrf_circuit.png', scale=1.4)
-# # or for svg
-# qc.draw(output='mpl').savefig('qrf_circuit.svg')

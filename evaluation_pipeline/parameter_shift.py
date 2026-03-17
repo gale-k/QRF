@@ -1,5 +1,6 @@
-import numpy as np
+# parameter_shift.py
 
+import numpy as np
 
 def parameter_shift_gradient(qrf, query_angle, key_angle, theta):
 

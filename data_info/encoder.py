@@ -1,3 +1,5 @@
+# encoder.py
+
 import numpy as np
 
 class AngleEncoder:

@@ -1,3 +1,5 @@
+# toy_dataset.py
+
 from relational_datasets import load
 from data_info.encoder import AngleEncoder
 import numpy as np
