@@ -7,7 +7,12 @@ from batch_utils import sample_batch
 from attention_baselines import evaluate_qrf_with_baselines
 from train_qrf_batched import train_qrf_batched
 
-# Main pipeline
+from plots import plot_accuracy_comparison
+from plots import plot_dataset_comparison
+from plots import plot_qrf_training_loss
+
+
+# main pipeline
 def run_pipeline(
         datasets,
         epochs=5,
@@ -34,13 +39,15 @@ def run_pipeline(
         qrf = quantum_reference_frame_attention(n_qubits=n_qubits)
 
         # Train QRF using mini-batches
-        theta = train_qrf_batched(
+        theta, loss = train_qrf_batched(
             qrf,
             dataset_obj,
             epochs=epochs,
             batch_size=batch_size,
             key_samples=key_samples
         )
+
+        plot_qrf_training_loss(loss)
 
         # Evaluate QRF + baselines
         acc_classical, acc_kernel, acc_qrf = evaluate_qrf_with_baselines(
@@ -51,17 +58,20 @@ def run_pipeline(
             eval_samples=eval_samples
         )
 
-        print(f"[RESULTS] Classical: {acc_classical:.4f}, Kernel: {acc_kernel:.4f}, QRF: {acc_qrf:.4f}")
+        # print(f"[RESULTS] Classical: {acc_classical:.4f}, Kernel: {acc_kernel:.4f}, QRF: {acc_qrf:.4f}")
+        plot_accuracy_comparison(dataset_name, acc_classical, acc_kernel, acc_qrf)
 
         all_results[dataset_name] = {
             "classical_acc": acc_classical,
             "kernel_acc": acc_kernel,
             "qrf_acc": acc_qrf
         }
+        
 
     print("\n=== Summary Metrics ===")
     for ds, metrics in all_results.items():
         print(f"{ds}: {metrics}")
+
 
     return all_results
 
@@ -72,14 +82,10 @@ if __name__ == "__main__":
     #     "toy_cancer", "toy_father", "toy_machines"
     # ]
 
-    # datasets = [
-    #     "boston_housing", "california_housing", "citeseer", "cora",
-    #     "drug_interactions", "financial_nlp_small", "icml", "nell_sports",
-    #     "roofworld20", "uwcse", "webkb"
-    # ]
-
     datasets = [
-        "boston_housing", "california_housing"
+        "boston_housing", "california_housing", "citeseer", "cora",
+        "drug_interactions", "financial_nlp_small", "icml", "nell_sports",
+        "roofworld20", "uwcse", "webkb"
     ]
 
     results = run_pipeline(
@@ -89,3 +95,5 @@ if __name__ == "__main__":
         key_samples=6,
         eval_samples=100
     )
+
+    plot_dataset_comparison(results)

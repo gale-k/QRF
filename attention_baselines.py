@@ -6,6 +6,8 @@ from quantum_kernel_attention import quantum_kernel_attention_matrix
 import matplotlib.pyplot as plt
 import os
 
+from plots import plot_attention_matrix
+
 def evaluate_all_attentions(dataset, qrf, theta_values=None, eval_samples=100):
 
     n = len(dataset)
@@ -51,6 +53,14 @@ def evaluate_all_attentions(dataset, qrf, theta_values=None, eval_samples=100):
     for i in range(eval_samples):
         score = kernel_matrix[i, i]  # use pairwise attention
         kernel_preds.append(1 if score > k_threshold else 0)
+
+    plot_attention_matrix(classical_matrix,
+                      "Classical Attention Matrix",
+                      "classical_attention.png")
+
+    plot_attention_matrix(kernel_matrix,
+                      "Quantum Kernel Attention Matrix",
+                      "kernel_attention.png")
 
     # QRF attention
     for i in range(eval_samples):
@@ -105,7 +115,7 @@ def evaluate_qrf_with_baselines(dataset_name, dataset, qrf, theta, eval_samples=
     acc_kernel = np.mean(np.array(kernel_preds) == labels)
     acc_qrf = np.mean(np.array(qrf_preds) == labels)
 
-    print(f"[RESULTS] Classical: {acc_classical:.4f}, Kernel: {acc_kernel:.4f}, QRF: {acc_qrf:.4f}")
+    # print(f"[RESULTS] Classical: {acc_classical:.4f}, Kernel: {acc_kernel:.4f}, QRF: {acc_qrf:.4f}")
 
     plt.figure(figsize=(6,4))
     plt.scatter(range(len(labels)), labels, label="True", alpha=0.7)
@@ -115,7 +125,7 @@ def evaluate_qrf_with_baselines(dataset_name, dataset, qrf, theta, eval_samples=
     plt.ylabel("Label")
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join("results", f"{dataset_name}_qrf_plot.png"))
+    plt.savefig(os.path.join("results/qrf_plots", f"{dataset_name}_qrf_plot.png"))
     plt.close()
     
     return acc_classical, acc_kernel, acc_qrf

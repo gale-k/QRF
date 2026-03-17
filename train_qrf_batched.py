@@ -8,13 +8,14 @@ def train_qrf_batched(qrf, dataset, epochs=10, batch_size=16, key_samples=4, lr=
     theta = np.random.uniform(0, 2*np.pi, qrf.n_params)
 
     print("Initial theta length:", len(theta))
+    loss_history = []
 
     for epoch in range(epochs):
 
         batch = sample_batch(dataset, batch_size)
 
         total_loss = 0
-
+        
         for query_angle, _, label in batch:
 
             keys = sample_keys(dataset, key_samples)
@@ -40,6 +41,9 @@ def train_qrf_batched(qrf, dataset, epochs=10, batch_size=16, key_samples=4, lr=
 
             theta -= lr * grad_mean
 
+        avg_loss = total_loss / batch_size
+        loss_history.append(avg_loss)
+
         print(f"Epoch {epoch+1} | Loss: {total_loss:.4f}")
 
-    return theta
+    return theta, loss_history
