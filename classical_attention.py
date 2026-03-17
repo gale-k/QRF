@@ -18,6 +18,6 @@ def classical_attention_matrix(query_angles, key_angles):
             score = np.dot(queries[i], keys[j])
             A[i, j] = np.exp(score)
     
-    # normalize per row
+    # normalise per row
     A /= A.sum(axis=1, keepdims=True)
     return A

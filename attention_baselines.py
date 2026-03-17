@@ -6,72 +6,6 @@ from quantum_kernel_attention import quantum_kernel_attention_matrix
 import matplotlib.pyplot as plt
 import os
 
-
-# def evaluate_all_attentions(dataset, qrf, theta_values=None):
-#     n = len(dataset)
-    
-#     classical_preds = []
-#     kernel_preds = []
-#     qrf_preds = []
-#     labels = []
-
-#     query_angles = []
-#     key_angles = []
-
-#     # Extract all pairs
-#     for i in range(n):
-#         q, k, label = dataset.get_pair(i)
-#         query_angles.append(q)
-#         key_angles.append(k)
-#         labels.append(label)
-
-#     # ----------------------------
-#     # Classical attention
-#     # ----------------------------
-#     from classical_attention import classical_attention_matrix
-#     classical_matrix = classical_attention_matrix(query_angles, key_angles)
-#     for i in range(n):
-#         pred = np.mean(classical_matrix[i])
-#         classical_preds.append(1 if pred > 0.5 else 0)
-
-#     # ----------------------------
-#     # Quantum kernel attention
-#     # ----------------------------
-#     from quantum_kernel_attention import quantum_kernel_attention_matrix
-#     kernel_matrix = quantum_kernel_attention_matrix(query_angles, key_angles, shots=1024)
-#     for i in range(n):
-#         pred = np.mean(kernel_matrix[i])
-#         kernel_preds.append(1 if pred > 0.5 else 0)
-
-#     # ----------------------------
-#     # QRF attention (multi-token)
-#     # ----------------------------
-#     for i in range(n):
-#         row_scores = []
-#         # Pack query and key angles as a multi-token input
-#         token_angles_i = [query_angles[i], key_angles[i]]
-#         for j in range(n):
-#             token_angles_j = [query_angles[j], key_angles[j]]
-#             qc = qrf.build_qrf_circuit(token_angles_i + token_angles_j, theta_values)
-#             score = qrf.attention_score(qc)
-#             row_scores.append(score)
-#         pred = np.mean(row_scores)
-#         qrf_preds.append(1 if pred > 0.5 else 0)
-
-#     # ----------------------------
-#     # Compute accuracies
-#     # ----------------------------
-#     labels = np.array(labels)
-#     classical_acc = np.mean(np.array(classical_preds) == labels)
-#     kernel_acc = np.mean(np.array(kernel_preds) == labels)
-#     qrf_acc = np.mean(np.array(qrf_preds) == labels)
-
-#     print(f"Classical Attention Accuracy: {classical_acc:.4f}")
-#     print(f"Quantum Kernel Attention Accuracy: {kernel_acc:.4f}")
-#     print(f"QRF Attention Accuracy: {qrf_acc:.4f}")
-    
-#     return classical_preds, kernel_preds, qrf_preds, labels
-
 def evaluate_all_attentions(dataset, qrf, theta_values=None, eval_samples=100):
 
     n = len(dataset)
@@ -94,31 +28,31 @@ def evaluate_all_attentions(dataset, qrf, theta_values=None, eval_samples=100):
         key_angles.append(k)
         labels.append(label)
 
-    # ----------------------------
-    # Classical attention
-    # ----------------------------
-    from classical_attention import classical_attention_matrix
 
+    # Classical attention
     classical_matrix = classical_attention_matrix(query_angles, key_angles)
 
-    for i in range(eval_samples):
-        pred = np.mean(classical_matrix[i])
-        classical_preds.append(1 if pred > 0.5 else 0)
+    # get threshold
+    c_threshold = np.mean(np.diag(classical_matrix))
+    
+    # print("[DEBUG] Example classical scores:", classical_matrix[:5,:5])
 
-    # ----------------------------
+    for i in range(eval_samples):
+        score = classical_matrix[i, i]  # use pairwise attention
+        classical_preds.append(1 if score > c_threshold else 0)
+
+
     # Quantum kernel attention
-    # ----------------------------
-    from quantum_kernel_attention import quantum_kernel_attention_matrix
+    kernel_matrix = quantum_kernel_attention_matrix(query_angles, key_angles, shots=1024) # same amount of shots as qrf
 
-    kernel_matrix = quantum_kernel_attention_matrix(query_angles, key_angles, shots=256)
+    # get threshold
+    k_threshold = np.mean(np.diag(kernel_matrix))
 
     for i in range(eval_samples):
-        pred = np.mean(kernel_matrix[i])
-        kernel_preds.append(1 if pred > 0.5 else 0)
+        score = kernel_matrix[i, i]  # use pairwise attention
+        kernel_preds.append(1 if score > k_threshold else 0)
 
-    # ----------------------------
     # QRF attention
-    # ----------------------------
     for i in range(eval_samples):
 
         row_scores = []
@@ -139,9 +73,7 @@ def evaluate_all_attentions(dataset, qrf, theta_values=None, eval_samples=100):
 
         qrf_preds.append(1 if pred > 0.5 else 0)
 
-    # ----------------------------
     # Compute accuracies
-    # ----------------------------
     labels = np.array(labels)
 
     classical_acc = np.mean(np.array(classical_preds) == labels)

@@ -23,10 +23,6 @@ class quantum_reference_frame_attention:
         qc.cx(0, 1)
         return qc
 
-    # def encode_tokens(self, qc, query_angle, key_angle):
-    #     qc.ry(query_angle, 2)
-    #     qc.ry(key_angle, 3)
-    #     return qc
 
     def encode_tokens(self, qc, token_angles, start_qubit=2):
         """
@@ -52,29 +48,7 @@ class quantum_reference_frame_attention:
     def add_relational_phase(self, qc):
         qc.cry(self.theta[8], 2, 3)
         return qc
-    
-    # def build_qrf_circuit(self, query_angle, key_angle, theta_values=None):
-    #     """
-    #     theta_values: optional list of numeric parameters to bind
-    #     """
-    #     qc = QuantumCircuit(self.n_qubits, 2)
 
-    #     # Build the QRF circuit
-    #     self.prepare_reference_frame(qc)
-    #     self.encode_tokens(qc, query_angle, key_angle)
-    #     self.add_trainable_layers(qc)
-    #     self.entangle_reference_with_tokens(qc)
-    #     self.add_relational_phase(qc)
-
-    #     # Measure token qubits only
-    #     qc.measure([2, 3], [0, 1])
-
-    #     # Bind trainable parameters if numeric values are provided
-    #     if theta_values is not None:
-    #         param_dict = {self.theta[i]: theta_values[i] for i in range(len(self.theta))}
-    #         qc = qc.assign_parameters(param_dict)
-
-    #     return qc
 
     def build_qrf_circuit(self, token_angles, theta_values=None):
         """
