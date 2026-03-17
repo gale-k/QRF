@@ -1,3 +1,5 @@
+# relational_dataset.py
+
 import numpy as np
 
 class RelationalDataset:
@@ -21,10 +23,10 @@ class RelationalDataset:
                 self.labels[i] = 0
 
     def get_pair(self, index):
-        """Return query and key as two sequences (for QRF)"""
+        # Return query and key as two sequences (for QRF)
         seq = self.data[index]
         label = self.labels[index]
-        # For simplicity, define query = first half, key = second half
+        # for simplicity, define query = first half, key = second half
         mid = len(seq) // 2
         query_seq = seq[:mid]
         key_seq = seq[mid:]
