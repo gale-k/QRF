@@ -1,9 +1,9 @@
 # evaluation_pipeline.py
 
-from QAttention import quantum_reference_frame_attention
-from data_info.datasets.toy_dataset import ToyRelationalQRF
-from attention_baselines import evaluate_qrf_with_baselines
-from train_qrf_batched import train_qrf_batched
+from attention_models.quantum_reference_frame_attention import quantum_reference_frame_attention
+from data_info.datasets.toy_dataset import RelationalQRF
+from evaluation_pipeline.attention_baselines import evaluate_qrf_with_baselines
+from evaluation_pipeline.train_qrf_batched import train_qrf_batched
 
 from plots import plot_accuracy_comparison, plot_dataset_comparison, plot_qrf_training_loss
 
@@ -23,7 +23,7 @@ def run_pipeline(
         print(f"\n=== Dataset: {dataset_name} ===")
 
         # load relational dataset wrapper
-        dataset_obj = ToyRelationalQRF(dataset_name)
+        dataset_obj = RelationalQRF(dataset_name)
 
         # determine number of qubits needed for QRF
         # each token pair has query + key, and we concatenate two pairs in attention
@@ -71,7 +71,7 @@ def run_pipeline(
     return all_results
 
 # entry point
-if __name__ == "__main__":
+def main_pipeline():
 
     # datasets = [
     #     "toy_cancer", "toy_father", "toy_machines"

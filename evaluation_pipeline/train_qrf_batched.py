@@ -1,8 +1,8 @@
 # train_qrf_batched.py
 
 import numpy as np
-from batch_utils import sample_batch, sample_keys
-from parameter_shift import parameter_shift_gradient
+from evaluation_pipeline.batch_utils import sample_batch, sample_keys
+from evaluation_pipeline.parameter_shift import parameter_shift_gradient
 
 
 def train_qrf_batched(qrf, dataset, epochs=10, batch_size=16, key_samples=4, lr=0.05):

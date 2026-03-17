@@ -65,25 +65,25 @@ class quantum_reference_frame_attention:
 
         qc = QuantumCircuit(self.n_qubits, len(token_angles))
 
-        # --- Reference frame ---
+        # Reference frame
         self.prepare_reference_frame(qc)
 
-        # --- Encode tokens ---
+        # Encode tokens
         self.encode_tokens(qc, token_angles, start_qubit=2)
 
-        # --- Add trainable layers ---
+        # Add trainable layers
         self.add_trainable_layers(qc)
 
-        # --- Entangle reference with tokens ---
+        # Entangle reference with tokens
         self.entangle_reference_with_tokens(qc)
 
-        # --- Add relational phase ---
+        # Add relational phase
         self.add_relational_phase(qc)
 
-        # --- Measure token qubits only ---
+        # Measure token qubits only
         qc.measure(range(2, 2 + len(token_angles)), range(len(token_angles)))
 
-        # --- Bind trainable parameters if provided ---
+        # Bind trainable parameters if provided
         if theta_values is not None:
             if len(theta_values) != len(self.theta):
                 raise ValueError(

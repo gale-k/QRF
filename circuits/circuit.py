@@ -1,10 +1,11 @@
 # produce a circuit image file from existing Qiskit circuit
-from QAttention import QuantumCircuit
+from attention_models.quantum_reference_frame_attention import QuantumCircuit
 
 # circuit.py
-from QAttention import quantum_reference_frame_attention
+from attention_models.quantum_reference_frame_attention import quantum_reference_frame_attention
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 # Example token angles for 2 tokens (query + key)
 token_angles = [0.5, 1.0]  # radians
@@ -16,17 +17,15 @@ qrf = quantum_reference_frame_attention(n_qubits=4)
 theta_values = np.random.uniform(0, 2 * np.pi, len(qrf.theta))
 qc = qrf.build_qrf_circuit(token_angles, theta_values)
 
-# -----------------------------
+
 # save as SVG
-# -----------------------------
 qc.draw(output='mpl')  # matplotlib figure
-plt.savefig("qrf_circuit.svg", bbox_inches='tight')
+plt.savefig(os.path.join("circuits","qrf_circuit.svg"), bbox_inches='tight')
 print("[INFO] Saved QRF circuit as qrf_circuit.svg")
 
-# -----------------------------
+
 # save as PNG
-# -----------------------------
-plt.savefig("qrf_circuit.png", bbox_inches='tight', dpi=300)
+plt.savefig(os.path.join("circuits", "qrf_circuit.png"), bbox_inches='tight', dpi=300)
 print("[INFO] Saved QRF circuit as qrf_circuit.png")
 
 

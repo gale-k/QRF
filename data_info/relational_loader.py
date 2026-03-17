@@ -1,4 +1,3 @@
-import data_info.datasets.toy_dataset
 from data_info.datasets.toy_dataset import ToyRelationalQRF
 
 

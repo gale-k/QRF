@@ -1,8 +1,8 @@
 # attention_baseline.py
 
 import numpy as np
-from classical_attention import classical_attention_matrix
-from quantum_kernel_attention import quantum_kernel_attention_matrix
+from attention_models.classical_attention import classical_attention_matrix
+from attention_models.quantum_kernel_attention import quantum_kernel_attention_matrix
 
 from plots import plot_attention_matrix, dataset_plots
 
