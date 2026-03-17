@@ -1,12 +1,10 @@
+# attention_baseline.py
+
 import numpy as np
-from QAttention import quantum_reference_frame_attention
-from data_info.relational_loader import load_relational_dataset
 from classical_attention import classical_attention_matrix
 from quantum_kernel_attention import quantum_kernel_attention_matrix
-import matplotlib.pyplot as plt
-import os
 
-from plots import plot_attention_matrix
+from plots import plot_attention_matrix, dataset_plots
 
 def evaluate_all_attentions(dataset, qrf, theta_values=None, eval_samples=100):
 
@@ -117,15 +115,6 @@ def evaluate_qrf_with_baselines(dataset_name, dataset, qrf, theta, eval_samples=
 
     # print(f"[RESULTS] Classical: {acc_classical:.4f}, Kernel: {acc_kernel:.4f}, QRF: {acc_qrf:.4f}")
 
-    plt.figure(figsize=(6,4))
-    plt.scatter(range(len(labels)), labels, label="True", alpha=0.7)
-    plt.scatter(range(len(qrf_preds)), qrf_preds, label="QRF Predicted", alpha=0.5)
-    plt.title(f"{dataset_name} - QRF Predictions vs True")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Label")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(os.path.join("results/qrf_plots", f"{dataset_name}_qrf_plot.png"))
-    plt.close()
+    dataset_plots(labels, qrf_preds, dataset_name)
     
     return acc_classical, acc_kernel, acc_qrf

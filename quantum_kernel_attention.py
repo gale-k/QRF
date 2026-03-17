@@ -1,31 +1,8 @@
+# quantum_kernel_attention.py
+
 from qiskit import QuantumCircuit
 from qiskit_aer import Aer
 import numpy as np
-
-# def quantum_kernel_score(theta_i, theta_j, shots=1024):
-#     """Compute a measurement-based approximation of |<psi_i|psi_j>|^2"""
-#     backend = Aer.get_backend("aer_simulator")
-
-#     # prepare first state
-#     qc_i = QuantumCircuit(1, 1)
-#     qc_i.ry(theta_i, 0)
-#     qc_i.measure(0, 0)
-#     result_i = backend.run(qc_i, shots=shots).result()
-#     counts_i = result_i.get_counts()
-#     # probability of |0> for first state
-#     p0_i = counts_i.get("0", 0) / shots
-
-#     # prepare second state
-#     qc_j = QuantumCircuit(1, 1)
-#     qc_j.ry(theta_j, 0)
-#     qc_j.measure(0, 0)
-#     result_j = backend.run(qc_j, shots=shots).result()
-#     counts_j = result_j.get_counts()
-#     p0_j = counts_j.get("0", 0) / shots
-
-#     # approximate fidelity as probability overlap
-#     score = np.sqrt(p0_i * p0_j) + np.sqrt((1 - p0_i) * (1 - p0_j))
-#     return score**2
 
 def quantum_kernel_score(theta_i, theta_j, shots=1024):
 
