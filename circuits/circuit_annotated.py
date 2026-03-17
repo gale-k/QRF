@@ -1,10 +1,9 @@
 from qiskit import QuantumCircuit
 from qiskit.visualization import circuit_drawer
 from qiskit.circuit import ParameterVector
+import os
 
-# ----------------------------
 # QRF Circuit with annotated θ
-# ----------------------------
 def build_annotated_qrf():
     n_qubits = 4  # 2 reference + 2 token
     n_params = 9
@@ -44,15 +43,13 @@ def build_annotated_qrf():
 
     return qc
 
-# ----------------------------
 # Draw and save circuit
-# ----------------------------
 if __name__ == "__main__":
     qc = build_annotated_qrf()
 
     # Save as SVG
-    circuit_drawer(qc, output='mpl', filename='qrf_annotated.svg')
+    circuit_drawer(qc, output='mpl', filename='circuits/qrf_annotated.svg')
     # Save as PNG
-    circuit_drawer(qc, output='mpl', filename='qrf_annotated.png')
+    circuit_drawer(qc, output='mpl', filename='circuits/qrf_annotated.png')
 
     print("Annotated QRF circuit saved as 'qrf_annotated.svg' and 'qrf_annotated.png'.")

@@ -12,7 +12,7 @@ import re
 
 # imports for relational datasets: https://pypi.org/project/relational-datasets/
 
-class ToyRelationalQRF:
+class RelationalQRF:
 
     def __init__(self, dataset_name):
 

@@ -1,7 +1,7 @@
 __pycache__/
 qrf-environment
-qrf_circuit.png
-qrf_circuit.svg
-qrf_annotated.png
-qrf_annotated.svg
-results/*
+results/attention_accuracy/*
+results/attention_matrix/*
+results/dataset_comparison/*
+results/epoch_loss/*
+results/qrf_plots/*
