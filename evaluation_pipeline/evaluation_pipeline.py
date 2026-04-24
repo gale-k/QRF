@@ -76,37 +76,36 @@ def main_pipeline():
 
     modes = ["full", "no_entanglement", "no_reference"]
 
-    all_ablation_results = {}
-
-    datasets = [
-        "toy_cancer", "toy_father", "toy_machines"
-    ]
-
     # datasets = [
-    #     "boston_housing", "california_housing", "citeseer", "cora",
-    #     "drug_interactions", "financial_nlp_small", "icml", "nell_sports",
-    #     "roofworld20", "uwcse", "webkb"
+    #     "toy_cancer", "toy_father", "toy_machines"
     # ]
 
-    # results = run_pipeline(
-    #     datasets=datasets,
-    #     epochs=20,
-    #     batch_size=16,
-    #     key_samples=6,
-    #     eval_samples=100,
-    #     mode=mode
-    # )
+    datasets = [
+        "boston_housing", "california_housing", "citeseer", "cora",
+        "drug_interactions", "financial_nlp_small", "icml", "nell_sports",
+        "roofworld20", "uwcse", "webkb"
+    ]
 
-    for mode in modes:
-        print(f"\n\n===== RUNNING MODE: {mode.upper()} =====")
+    results = run_pipeline(
+        datasets=datasets,
+        epochs=20,
+        batch_size=16,
+        key_samples=6,
+        eval_samples=100,
+        mode="full"
+    )
 
-        results = run_pipeline(
-            datasets=datasets,
-            epochs=20,
-            batch_size=16,
-            key_samples=6,
-            eval_samples=100,
-            mode=mode
-        )
+    # uncomment below for ablation test
+    # for mode in modes:
+    #     print(f"\n\n===== RUNNING MODE: {mode.upper()} =====")
+
+    #     results = run_pipeline(
+    #         datasets=datasets,
+    #         epochs=20,
+    #         batch_size=16,
+    #         key_samples=6,
+    #         eval_samples=100,
+    #         mode=mode
+    #     )
 
 
