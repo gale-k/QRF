@@ -19,7 +19,7 @@ class quantum_reference_frame_attention:
         self.n_qubits = n_qubits
         self.n_params = n_params
         self.theta = ParameterVector("θ", n_params)
-        self.mode = MODE
+        self.mode = mode
 
     
     def prepare_reference_frame(self, qc):
