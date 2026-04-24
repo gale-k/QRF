@@ -53,18 +53,12 @@ class quantum_reference_frame_attention:
         return qc
 
     def add_relational_phase(self, qc):
-        if self.mode != "no_entanglement":
+        if self.mode not in ["no_entanglement", "no_reference"]:
             qc.cry(self.theta[8], 2, 3)
         return qc
 
-
     def build_qrf_circuit(self, token_angles, theta_values=None):
-        """
-        token_angles: list of angles for each token (multi-token sequences)
-        n_qubits = len(token_angles) + number of reference qubits
-        """
-
-        n_qubits_needed = 2 + len(token_angles)  # 2 reference qubits
+        n_qubits_needed = 2 + len(token_angles)
         if n_qubits_needed > self.n_qubits:
             raise ValueError(
                 f"QRF initialized with {self.n_qubits} qubits, "
@@ -73,32 +67,27 @@ class quantum_reference_frame_attention:
 
         qc = QuantumCircuit(self.n_qubits, len(token_angles))
 
-        # Reference frame
         self.prepare_reference_frame(qc)
-
-        # Encode tokens
         self.encode_tokens(qc, token_angles, start_qubit=2)
-
-        # Add trainable layers
         self.add_trainable_layers(qc)
-
-        # Entangle reference with tokens
         self.entangle_reference_with_tokens(qc)
-
-        # Add relational phase
         self.add_relational_phase(qc)
 
-        # Measure token qubits only
         qc.measure(range(2, 2 + len(token_angles)), range(len(token_angles)))
 
-        # Bind trainable parameters if provided
         if theta_values is not None:
             if len(theta_values) != len(self.theta):
                 raise ValueError(
                     f"theta_values length ({len(theta_values)}) "
                     f"must match number of circuit parameters ({len(self.theta)})"
                 )
-            param_dict = {self.theta[i]: theta_values[i] for i in range(len(self.theta))}
+            # FIX: only bind parameters actually present in this circuit
+            circuit_params = qc.parameters
+            param_dict = {
+                self.theta[i]: theta_values[i]
+                for i in range(len(self.theta))
+                if self.theta[i] in circuit_params
+            }
             qc = qc.assign_parameters(param_dict)
 
         return qc
