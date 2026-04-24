@@ -102,17 +102,11 @@ def main_pipeline():
 
         results = run_pipeline(
             datasets=datasets,
-            epochs=10,   # 👈 reduce for speed
+            epochs=20,
             batch_size=16,
             key_samples=6,
             eval_samples=100,
             mode=mode
         )
 
-    all_ablation_results[mode] = results
 
-    print("\n=== ABLATION SUMMARY ===")
-    for mode, res in all_ablation_results.items():
-        print(mode, res)
-
-    plot_dataset_comparison(results)
