@@ -6,9 +6,10 @@ from qiskit.circuit import ParameterVector
 import numpy as np
 
 N_PARAMS = 9
+MODE = "full"
 
 class quantum_reference_frame_attention:
-    def __init__(self, n_qubits=4, n_params=N_PARAMS):
+    def __init__(self, n_qubits=4, n_params=N_PARAMS, mode=MODE):
         """
         Qubits:
         0-1 : reference frame (entangled)
@@ -18,13 +19,14 @@ class quantum_reference_frame_attention:
         self.n_qubits = n_qubits
         self.n_params = n_params
         self.theta = ParameterVector("θ", n_params)
+        self.mode = MODE
 
     
     def prepare_reference_frame(self, qc):
-        qc.h(0)
-        qc.cx(0, 1)
+        if self.mode != "no_reference":
+            qc.h(0)
+            qc.cx(0, 1)
         return qc
-
 
     def encode_tokens(self, qc, token_angles, start_qubit=2):
         """
@@ -36,19 +38,23 @@ class quantum_reference_frame_attention:
         return qc
     
     def add_trainable_layers(self, qc):
-        # add 9 trainable parameters on each qubit
         for i in range(4):
+            if self.mode == "no_reference" and i < 2:
+                continue  # skip reference qubits
+
             qc.ry(self.theta[i], i)
             qc.rz(self.theta[i+4], i)
         return qc
     
     def entangle_reference_with_tokens(self, qc):
-        qc.cx(0, 2)
-        qc.cx(1, 3)
+        if self.mode != "no_entanglement":
+            qc.cx(0, 2)
+            qc.cx(1, 3)
         return qc
 
     def add_relational_phase(self, qc):
-        qc.cry(self.theta[8], 2, 3)
+        if self.mode != "no_entanglement":
+            qc.cry(self.theta[8], 2, 3)
         return qc
 
 

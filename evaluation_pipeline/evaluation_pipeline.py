@@ -14,7 +14,8 @@ def run_pipeline(
         epochs=5,
         batch_size=16,
         key_samples=4,
-        eval_samples=100
+        eval_samples=100,
+        mode="full"
     ):
 
     all_results = {}
@@ -32,7 +33,7 @@ def run_pipeline(
         n_qubits = 2 + total_tokens  # 2 reference qubits + token qubits
 
         # initialise QRF attention model with enough qubits
-        qrf = quantum_reference_frame_attention(n_qubits=n_qubits)
+        qrf = quantum_reference_frame_attention(n_qubits=n_qubits, mode=mode)
 
         # train QRF using mini-batches
         theta, loss = train_qrf_batched(
@@ -73,22 +74,45 @@ def run_pipeline(
 # entry point
 def main_pipeline():
 
-    # datasets = [
-    #     "toy_cancer", "toy_father", "toy_machines"
-    # ]
+    modes = ["full", "no_entanglement", "no_reference"]
+
+    all_ablation_results = {}
 
     datasets = [
-        "boston_housing", "california_housing", "citeseer", "cora",
-        "drug_interactions", "financial_nlp_small", "icml", "nell_sports",
-        "roofworld20", "uwcse", "webkb"
+        "toy_cancer", "toy_father", "toy_machines"
     ]
 
-    results = run_pipeline(
-        datasets=datasets,
-        epochs=20,
-        batch_size=16,
-        key_samples=6,
-        eval_samples=100
-    )
+    # datasets = [
+    #     "boston_housing", "california_housing", "citeseer", "cora",
+    #     "drug_interactions", "financial_nlp_small", "icml", "nell_sports",
+    #     "roofworld20", "uwcse", "webkb"
+    # ]
+
+    # results = run_pipeline(
+    #     datasets=datasets,
+    #     epochs=20,
+    #     batch_size=16,
+    #     key_samples=6,
+    #     eval_samples=100,
+    #     mode=mode
+    # )
+
+    for mode in modes:
+        print(f"\n\n===== RUNNING MODE: {mode.upper()} =====")
+
+        results = run_pipeline(
+            datasets=datasets,
+            epochs=10,   # 👈 reduce for speed
+            batch_size=16,
+            key_samples=6,
+            eval_samples=100,
+            mode=mode
+        )
+
+    all_ablation_results[mode] = results
+
+    print("\n=== ABLATION SUMMARY ===")
+    for mode, res in all_ablation_results.items():
+        print(mode, res)
 
     plot_dataset_comparison(results)
